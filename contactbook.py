@@ -1,77 +1,63 @@
 import pickle
 
-class Person:
-    def __init__(self, name: str, email: str, phone: str, favorite: bool):
+class Contact:
+    def __init__(self, name, phone):
         self.name = name
-        self.email = email
         self.phone = phone
-        self.favorite = favorite
 
-class Contacts:
+class AddressBook:
     def __init__(self):
         self.contacts = []
 
-    def add_contact(self, person: Person):
-        self.contacts.append(person)
+    def add_contact(self, contact):
+        self.contacts.append(contact)
 
-    def save_to_file(self, filename: str):
-        with open(filename, "wb") as file:
-            pickle.dump(self.contacts, file)
-
-    @classmethod
-    def read_from_file(cls, filename: str):
-        contacts = []
-        try:
-            with open(filename, "rb") as file:
-                contacts = pickle.load(file)
-        except FileNotFoundError:
-            pass
-        instance = cls()
-        instance.contacts = contacts
-        return instance
-
-    def search_contacts(self, query: str):
+    def search_contact(self, keyword):
         results = []
         for contact in self.contacts:
-            if (
-                query in contact.name
-                or query in contact.phone
-            ):
+            if keyword in contact.name or keyword in contact.phone:
                 results.append(contact)
         return results
 
-if __name__ == "__main__":
-    filename = "contacts.pkl"
-    contacts = Contacts.read_from_file(filename)
+    def save_to_disk(self, filename):
+        with open(filename, 'wb') as file:
+            pickle.dump(self.contacts, file)
 
-    while True:
-        print("1. Додати контакт")
-        print("2. Пошук контакту")
-        print("3. Вийти")
-        choice = input("Виберіть опцію: ")
+    def load_from_disk(self, filename):
+        try:
+            with open(filename, 'rb') as file:
+                self.contacts = pickle.load(file)
+        except FileNotFoundError:
+            # Handle the case when the file doesn't exist yet
+            self.contacts = []
 
-        if choice == "1":
-            name = input("Ім'я: ")
-            email = input("Електронна пошта: ")
-            phone = input("Номер телефону: ")
-            favorite = input("Обраний контакт (True/False): ").lower() == "true"
-            contact = Person(name, email, phone, favorite)
-            contacts.add_contact(contact)
-            contacts.save_to_file(filename)
-            print("Контакт додано.")
+# Create an AddressBook instance
+address_book = AddressBook()
 
-        elif choice == "2":
-            query = input("Введіть рядок для пошуку: ")
-            results = contacts.search_contacts(query)
-            if results:
-                for result in results:
-                    print(f"Ім'я: {result.name}")
-                    print(f"Електронна пошта: {result.email}")
-                    print(f"Номер телефону: {result.phone}")
-                    print(f"Обраний контакт: {result.favorite}")
-                    print()
-            else:
-                print("Збігів не знайдено.")
+# Load contacts from disk (if the file exists)
+address_book.load_from_disk('address_book.pkl')
 
-        elif choice == "3":
-            break
+while True:
+    print("1. Add Contact")
+    print("2. Search Contact")
+    print("3. Save and Exit")
+    choice = input("Enter your choice: ")
+
+    if choice == '1':
+        name = input("Enter contact name: ")
+        phone = input("Enter contact phone: ")
+        contact = Contact(name, phone)
+        address_book.add_contact(contact)
+
+    elif choice == '2':
+        keyword = input("Enter search keyword: ")
+        results = address_book.search_contact(keyword)
+        if results:
+            for result in results:
+                print(f"Name: {result.name}, Phone: {result.phone}")
+        else:
+            print("No matching contacts found.")
+
+    elif choice == '3':
+        address_book.save_to_disk('address_book.pkl')
+        break
